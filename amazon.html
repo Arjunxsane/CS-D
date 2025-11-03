@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Amazon Clone — Demo</title>
+  <style>
+    /* ---- Reset & base ---- */
+    :root{--primary:#131921;--accent:#ff9900;--muted:#f3f3f3;--card:#fff;--text:#111}
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--text);background:linear-gradient(180deg,#f7f7f7, #fff)}
+    a{color:inherit;text-decoration:none}
+
+    /* ---- Header ---- */
+    .header{background:var(--primary);color:#fff;display:flex;align-items:center;padding:12px 20px;gap:12px;position:sticky;top:0;z-index:50}
+    .logo{display:flex;align-items:center;gap:8px;font-weight:700}
+    .logo .box{background:#fff;color:var(--primary);padding:6px 10px;border-radius:4px;font-weight:800}
+
+    .search{flex:1;display:flex;gap:8px;align-items:center}
+    .search input{flex:1;padding:10px;border-radius:6px;border:0;outline:none}
+    .search button{background:var(--accent);border:none;padding:10px 14px;border-radius:6px;font-weight:700;cursor:pointer}
+
+    .header .nav{display:flex;gap:12px;align-items:center}
+    .nav .nav-item{font-size:14px;cursor:pointer}
+
+    /* ---- Main layout ---- */
+    .container{max-width:1200px;margin:24px auto;padding:0 18px}
+    .hero{display:flex;gap:18px;align-items:center}
+    .hero .banner{flex:1;background:linear-gradient(90deg,#fff 20%, #f8f8f8);border-radius:10px;padding:24px;box-shadow:0 6px 18px rgba(17,24,39,0.06)}
+    .hero .sidebar{width:260px}
+
+    /* ---- Categories ---- */
+    .categories{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+    .cat{background:var(--card);padding:8px 12px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,0.04);font-size:13px;cursor:pointer}
+
+    /* ---- Products grid ---- */
+    .controls{display:flex;justify-content:space-between;align-items:center;margin:8px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+    .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(17,24,39,0.06);display:flex;flex-direction:column;gap:10px}
+    .card img{width:100%;height:160px;object-fit:contain;background:linear-gradient(180deg,#fafafa,#fff);border-radius:6px}
+    .card .title{font-size:15px;font-weight:600;min-height:44px}
+    .price{color:var(--primary);font-weight:800}
+    .rating{font-size:13px;color:#666}
+    .card .actions{margin-top:auto;display:flex;gap:8px}
+    .btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#fff;cursor:pointer}
+    .btn.primary{background:var(--accent);border:none;color:#111;font-weight:700}
+
+    /* ---- Cart sidebar ---- */
+    .cart-drawer{position:fixed;right:0;top:0;height:100%;width:360px;background:#fff;box-shadow:-20px 0 40px rgba(0,0,0,0.08);transform:translateX(100%);transition:transform .28s ease;z-index:80;padding:18px;display:flex;flex-direction:column}
+    .cart-drawer.open{transform:translateX(0)}
+    .cart-drawer h3{margin:0 0 10px}
+    .cart-items{flex:1;overflow:auto}
+    .cart-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
+    .cart-item img{width:64px;height:64px;object-fit:contain}
+    .cart-footer{padding-top:10px}
+
+    /* ---- Modal ---- */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:90}
+    .modal-backdrop.open{display:flex}
+    .modal{background:#fff;padding:18px;border-radius:10px;max-width:900px;width:94%;display:flex;gap:16px}
+    .modal img{width:380px;height:380px;object-fit:contain}
+
+    /* ---- Footer ----
+    */
+    footer{padding:36px 0;color:#666;text-align:center}
+
+    /* ---- Responsive ---- */
+    @media (max-width:800px){
+      .hero{flex-direction:column}
+      .header{padding:10px}
+      .cart-drawer{width:100%}
+      .modal{flex-direction:column}
+      .modal img{width:100%;height:260px}
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="box">a</div>
+      <div>
+        <div style="font-size:14px">a-store</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.9)">deliver to you</div>
+      </div>
+    </div>
+
+    <div class="search">
+      <select id="categorySelect" style="padding:10px;border-radius:6px;border:0">
+        <option value="all">All</option>
+      </select>
+      <input id="searchInput" placeholder="Search products, brands and more" />
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item" id="cartToggle">Cart (<span id="cartCount">0</span>)</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="banner">
+        <h1 style="margin:0 0 8px">Welcome to the Demo Amazon Clone</h1>
+        <p style="margin:0 0 12px;color:#555">A small, responsive single-file demo showing product grid, cart, filters and a product modal. Perfect for learning.</p>
+
+        <div class="categories" id="categories"></div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="background:#111;color:#fff;padding:10px 12px;border-radius:8px">Free shipping</div>
+          <div style="background:rgba(255,153,0,0.12);padding:10px 12px;border-radius:8px;color:#7a4a00">Deals of the day</div>
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <div style="background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(17,24,39,0.04)">
+          <h3 style="margin-top:0">Filters</h3>
+          <label style="display:block;margin:8px 0;font-size:14px">Price</label>
+          <input id="priceRange" type="range" min="0" max="1000" value="1000" />
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn" id="sortAsc">Price ↑</button>
+            <button class="btn" id="sortDesc">Price ↓</button>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section style="margin-top:18px">
+      <div class="controls">
+        <div id="resultsInfo">Showing <span id="resultCount">0</span> products</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="font-size:13px;color:#555">View</label>
+          <select id="viewSelect"><option value="grid">Grid</option><option value="list">List</option></select>
+        </div>
+      </div>
+
+      <div id="productArea" class="grid"></div>
+    </section>
+  </main>
+
+  <div class="cart-drawer" id="cartDrawer">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>Your Cart</h3>
+      <button class="btn" id="closeCart">Close</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>Total:</div>
+        <div style="font-weight:800">₹<span id="cartTotal">0.00</span></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn">Checkout</button>
+        <button class="btn" id="clearCart">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" role="dialog">
+      <img id="modalImg" src="" alt="product image" />
+      <div style="flex:1;display:flex;flex-direction:column">
+        <h2 id="modalTitle"></h2>
+        <div id="modalPrice" style="font-size:20px;font-weight:800;margin-bottom:8px"></div>
+        <div id="modalRating" class="rating"></div>
+        <p id="modalDesc" style="color:#444"></p>
+        <div style="margin-top:auto;display:flex;gap:8px">
+          <button class="btn primary" id="modalAdd">Add to cart</button>
+          <button class="btn" id="modalClose">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Demo Amazon clone • not affiliated with Amazon • built with HTML, CSS & JS
+  </footer>
+
+<script>
+// ------------------ Sample product data ------------------
+const PRODUCTS = [
+  {id:1,title:'Wireless Headphones',category:'Electronics',price:1999,rating:4.5, img:'https://images.unsplash.com/photo-1518444021724-8d3072ddf8f8?auto=format&fit=crop&w=800&q=60', desc:'Comfortable wireless headphones with long battery life.'},
+  {id:2,title:'Smartphone Case',category:'Accessories',price:499,rating:4.1, img:'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=60', desc:'Slim protective case for modern smartphones.'},
+  {id:3,title:'Coffee Maker',category:'Home',price:3499,rating:4.7, img:'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=800&q=60', desc:'Brew barista-style coffee at home.'},
+  {id:4,title:'Running Shoes',category:'Sportswear',price:2599,rating:4.3, img:'https://images.unsplash.com/photo-1515548213404-9f35f7370e2f?auto=format&fit=crop&w=800&q=60', desc:'Lightweight running shoes for daily training.'},
+  {id:5,title:'Bluetooth Speaker',category:'Electronics',price:1499,rating:4.4, img:'https://images.unsplash.com/photo-1593804112069-483c8f5c5b2b?auto=format&fit=crop&w=800&q=60', desc:'Portable speaker with deep bass.'},
+  {id:6,title:'Desk Lamp',category:'Home',price:899,rating:4.0, img:'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=800&q=60', desc:'Adjustable desk lamp with warm LED.'},
+  {id:7,title:'Water Bottle',category:'Sportswear',price:299,rating:4.2, img:'https://images.unsplash.com/photo-1510627498534-cf7e9002facc?auto=format&fit=crop&w=800&q=60', desc:'Insulated stainless steel bottle.'},
+  {id:8,title:'Mechanical Keyboard',category:'Electronics',price:3999,rating:4.8, img:'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=60', desc:'Tactile mechanical keyboard with RGB.'},
+  {id:9,title:'Backpack',category:'Accessories',price:2199,rating:4.1, img:'https://images.unsplash.com/photo-1531973968078-9bb02785f13d?auto=format&fit=crop&w=800&q=60', desc:'Durable backpack with laptop pocket.'},
+  {id:10,title:'Scented Candle',category:'Home',price:399,rating:4.6, img:'https://images.unsplash.com/photo-1509228627152-9bb0d3d5f3f0?auto=format&fit=crop&w=800&q=60', desc:'Soy wax candle in glass jar.'}
+];
+
+// ------------------ State ------------------
+let state = {
+  products: PRODUCTS.slice(),
+  cart: JSON.parse(localStorage.getItem('demo_cart') || '[]'),
+  activeProduct: null
+};
+
+// ------------------ DOM refs ------------------
+const productArea = document.getElementById('productArea');
+const resultCount = document.getElementById('resultCount');
+const cartToggle = document.getElementById('cartToggle');
+const cartDrawer = document.getElementById('cartDrawer');
+const cartItems = document.getElementById('cartItems');
+const cartCount = document.getElementById('cartCount');
+const cartTotal = document.getElementById('cartTotal');
+const clearCartBtn = document.getElementById('clearCart');
+const closeCartBtn = document.getElementById('closeCart');
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const categorySelect = document.getElementById('categorySelect');
+const categoriesEl = document.getElementById('categories');
+const priceRange = document.getElementById('priceRange');
+const sortAsc = document.getElementById('sortAsc');
+const sortDesc = document.getElementById('sortDesc');
+const viewSelect = document.getElementById('viewSelect');
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalImg = document.getElementById('modalImg');
+const modalTitle = document.getElementById('modalTitle');
+const modalPrice = document.getElementById('modalPrice');
+const modalDesc = document.getElementById('modalDesc');
+const modalAdd = document.getElementById('modalAdd');
+const modalClose = document.getElementById('modalClose');
+
+// ------------------ Utilities ------------------
+function saveCart(){localStorage.setItem('demo_cart', JSON.stringify(state.cart));}
+function formatINR(n){return Number(n).toLocaleString('en-IN');}
+
+// ------------------ Renderers ------------------
+function renderCategories(){
+  const cats = ['All', ...new Set(PRODUCTS.map(p=>p.category))];
+  categorySelect.innerHTML = cats.map(c=>`<option value="${c.toLowerCase()}">${c}</option>`).join('');
+  categoriesEl.innerHTML = cats.map(c=>`<div class="cat" data-cat="${c.toLowerCase()}">${c}</div>`).join('');
+  categoriesEl.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',()=>{categorySelect.value=el.dataset.cat;applyFilters();}));
+}
+
+function renderProducts(list){
+  resultCount.textContent = list.length;
+  productArea.innerHTML = list.map(p=>`
+    <div class="card" data-id="${p.id}">
+      <img src="${p.img}" alt="${p.title}" loading="lazy" />
+      <div class="title">${p.title}</div>
+      <div class="rating">⭐ ${p.rating} • ${p.category}</div>
+      <div class="price">₹${formatINR(p.price)}</div>
+      <div class="actions">
+        <button class="btn" data-action="view" data-id="${p.id}">View</button>
+        <button class="btn primary" data-action="add" data-id="${p.id}">Add</button>
+      </div>
+    </div>
+  `).join('');
+
+  productArea.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const id = +btn.dataset.id; const act = btn.dataset.action;
+      const product = PRODUCTS.find(p=>p.id===id);
+      if(act==='view'){openModal(product)}
+      if(act==='add'){addToCart(product)}
+    });
+  });
+}
+
+function renderCart(){
+  cartCount.textContent = state.cart.reduce((s,i)=>s+i.qty,0);
+  cartItems.innerHTML = state.cart.map(item=>{
+    return `<div class="cart-item"><img src="${item.img}"/><div style="flex:1"><div style="font-weight:700">${item.title}</div><div>₹${formatINR(item.price)} • Qty: <input type="number" min="1" value="${item.qty}" data-id="${item.id}" style="width:64px" /></div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn" data-remove="${item.id}">Remove</button></div></div>`
+  }).join('') || '<div style="color:#666;padding:18px">Your cart is empty</div>';
+
+  cartItems.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', ()=>{removeFromCart(+b.dataset.remove);}));
+  cartItems.querySelectorAll('input[type="number"]').forEach(inp=>inp.addEventListener('change', ()=>{updateQty(+inp.dataset.id, +inp.value)}));
+
+  const total = state.cart.reduce((s,i)=>s + (i.price * i.qty), 0);
+  cartTotal.textContent = total.toFixed(2);
+  saveCart();
+}
+
+// ------------------ Cart operations ------------------
+function addToCart(product, qty=1){
+  const found = state.cart.find(i=>i.id===product.id);
+  if(found){found.qty += qty;} else {state.cart.push({...product, qty});}
+  renderCart();
+  // tiny visual hint
+  cartDrawer.classList.add('open');
+}
+
+function removeFromCart(id){state.cart = state.cart.filter(i=>i.id!==id);renderCart();}
+function updateQty(id, qty){if(qty<1) return; const it = state.cart.find(i=>i.id===id); if(it){it.qty = qty;renderCart();}}
+function clearCart(){state.cart = []; renderCart();}
+
+// ------------------ Modal ------------------
+function openModal(p){state.activeProduct = p; modalImg.src = p.img; modalTitle.textContent = p.title; modalPrice.textContent = '₹' + formatINR(p.price); modalDesc.textContent = p.desc; modalBackdrop.classList.add('open');}
+function closeModal(){modalBackdrop.classList.remove('open'); state.activeProduct = null}
+
+// ------------------ Filters & Search ------------------
+function applyFilters(){
+  const q = searchInput.value.trim().toLowerCase();
+  const catVal = categorySelect.value;
+  const maxPrice = +priceRange.value;
+  let filtered = PRODUCTS.filter(p=>{
+    const inCat = (catVal==='all') || (p.category.toLowerCase()===catVal);
+    const inPrice = p.price <= maxPrice;
+    const inQuery = !q || p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
+    return inCat && inPrice && inQuery;
+  });
+
+  // apply view
+  if(viewSelect.value==='list'){
+    productArea.classList.remove('grid');
+    productArea.style.display = 'block';
+    productArea.innerHTML = filtered.map(p=>`<div class="card" style="display:flex;gap:12px;align-items:center"><img style="width:120px;height:120px" src="${p.img}"><div style="flex:1"><div class="title">${p.title}</div><div class="rating">⭐ ${p.rating} • ${p.category}</div><div class="price">₹${formatINR(p.price)}</div><div style="margin-top:10px"><button class="btn" data-action="view" data-id="${p.id}">View</button> <button class="btn primary" data-action="add" data-id="${p.id}">Add</button></div></div></div>`).join('');
+  } else {
+    productArea.style.display = '';
+    renderProducts(filtered);
+  }
+}
+
+// ------------------ Events ------------------
+searchBtn.addEventListener('click', applyFilters);
+searchInput.addEventListener('keydown', e=>{if(e.key==='Enter') applyFilters();});
+categorySelect.addEventListener('change', applyFilters);
+priceRange.addEventListener('input', applyFilters);
+sortAsc.addEventListener('click', ()=>{state.products.sort((a,b)=>a.price-b.price); applyFilters();});
+sortDesc.addEventListener('click', ()=>{state.products.sort((a,b)=>b.price-a.price); applyFilters();});
+viewSelect.addEventListener('change', applyFilters);
+cartToggle.addEventListener('click', ()=>{cartDrawer.classList.toggle('open')});
+closeCartBtn.addEventListener('click', ()=>{cartDrawer.classList.remove('open')});
+clearCartBtn.addEventListener('click', clearCart);
+modalClose.addEventListener('click', closeModal);
+modalBackdrop.addEventListener('click', e=>{if(e.target===modalBackdrop) closeModal();});
+modalAdd.addEventListener('click', ()=>{ if(state.activeProduct){ addToCart(state.activeProduct); closeModal(); } });
+
+// ------------------ Init ------------------
+function init(){ renderCategories(); applyFilters(); renderCart(); }
+init();
+</script>
+</body>
+</html>
